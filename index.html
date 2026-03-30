@@ -3,338 +3,409 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Corn Wallet Creator</title>
+    <title>Turbo Wallet | Corn Silo Master</title>
     <script src="https://cdn.jsdelivr.net/npm/xrpl@4.0.0/build/xrpl-latest-min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/argon2-browser@1.18.0/dist/argon2-bundled.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hash-wasm@4.11.0/dist/argon2.umd.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --corn-yellow: #facc15; --corn-blue: #2563eb; }
-        body { background-color: #020617; color: #f8fafc; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; overflow-x: hidden; }
-        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.5; pointer-events: none; }
-        .brand-text { color: var(--corn-yellow); text-shadow: 0 0 15px rgba(250, 204, 21, 0.6); }
-        .glass { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(250, 204, 21, 0.2); backdrop-filter: blur(20px); }
-        .secret-blur { filter: blur(16px); transition: filter 0.3s ease; cursor: pointer; user-select: none; }
-        .secret-visible { filter: none !important; user-select: text; }
-        .input-dark { background: rgba(2, 6, 23, 0.9); border: 1px solid #1e293b; color: var(--corn-yellow); outline: none; padding: 12px; border-radius: 8px; }
-        .btn-primary { background: var(--corn-yellow); color: #000; font-weight: 900; transition: all 0.2s; text-transform: uppercase; border: none; }
-        .btn-primary:hover { background: #eab308; transform: scale(1.02); }
-        .label-accent { color: var(--corn-blue); font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 4px; display: block; }
-        .section-card { border-left: 3px solid #1e293b; transition: border-color 0.4s; }
-        .section-card:hover { border-left-color: var(--corn-yellow); }
-        .xaman-row { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(250,204,21,0.1); }
-        .xaman-letter { color: var(--corn-blue); font-weight: 900; font-size: 0.7rem; width: 12px; }
-        .xaman-number { color: var(--corn-yellow); font-weight: 800; font-size: 0.9rem; letter-spacing: 2px; }
-        
-        @keyframes flash-yellow {
-            0%, 100% { color: #facc15; opacity: 1; text-shadow: 0 0 10px #facc15; }
-            50% { color: #854d0e; opacity: 0.5; text-shadow: none; }
-        }
-        .flash-footer { animation: flash-yellow 1.5s infinite ease-in-out; }
-        .tab-btn { padding: 10px 20px; font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #475569; border-bottom: 2px solid transparent; transition: all 0.3s; }
-        .tab-btn.active { color: var(--corn-yellow); border-bottom-color: var(--corn-yellow); }
+        :root { --c-gold: #FFD700; --c-amber: #FFBF00; }
+        body { background-color: #000; color: #fff; font-family: ui-monospace, monospace; overflow-x: hidden; margin: 0; }
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: 0.35; }
+        .brand-text { color: var(--c-gold); text-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
+        .glass { background: rgba(8, 8, 0, 0.92); border: 1px solid rgba(255, 215, 0, 0.2); backdrop-filter: blur(20px); }
+        .secret-blur { filter: blur(18px); transition: filter 0.3s ease; cursor: pointer; }
+        .secret-visible { filter: none !important; }
+        .input-dark { background: rgba(0, 0, 0, 0.9); border: 1px solid #222; color: var(--c-gold); outline: none; padding: 12px; border-radius: 8px; font-size: 0.85rem; }
+        .btn-primary { background: linear-gradient(135deg, var(--c-amber), var(--c-gold)); color: #000; font-weight: 900; transition: all 0.2s; text-transform: uppercase; border: none; cursor: pointer; }
+        .btn-primary:hover { transform: scale(1.02); box-shadow: 0 0 30px rgba(255, 215, 0, 0.5); }
+        .label-accent { color: var(--c-gold); font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 6px; display: block; }
+        .tab-btn { padding: 12px 24px; font-weight: 800; font-size: 11px; text-transform: uppercase; color: #333; border-bottom: 2px solid transparent; transition: 0.3s; cursor: pointer; }
+        .tab-btn.active { color: var(--c-gold); border-bottom-color: var(--c-gold); }
+        .xaman-row { display: flex; align-items: center; gap: 4px; background: rgba(255, 215, 0, 0.05); padding: 4px; border-radius: 4px; border: 1px solid rgba(255, 215, 0, 0.1); }
+        .xaman-letter { color: #fff; font-weight: 900; font-size: 0.6rem; width: 10px; }
+        .xaman-number { color: var(--c-gold); font-weight: 800; font-size: 0.75rem; }
+        @keyframes glow-gold { 0%, 100% { color: var(--c-gold); opacity: 1; } 50% { color: var(--c-amber); opacity: 0.5; } }
+        .flash-footer { animation: glow-gold 3s infinite ease-in-out; }
+        #status-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; display: none; align-items: center; justify-content: center; flex-direction: column; }
     </style>
 </head>
-<body class="p-4 md:p-12 min-h-screen">
+<body class="p-4 md:p-8 min-h-screen">
     <canvas id="bg-canvas"></canvas>
-    <div class="max-w-4xl mx-auto space-y-10 pb-32 relative z-10">
-        <header class="flex flex-col items-center gap-6 text-center">
-            <div class="flex items-center gap-4">
-                <span class="text-4xl">🌽</span>
-                <h1 class="text-3xl md:text-5xl font-black brand-text italic tracking-tighter uppercase">Corn Wallet Creator</h1>
-                <span class="text-4xl">🌽</span>
+    
+    <div id="status-overlay">
+        <div id="overlay-msg" class="text-[#FFD700] text-xl font-black mb-4 animate-pulse uppercase">Syncing Silo Nodes...</div>
+        <div class="w-64 h-1 bg-zinc-900 rounded-full overflow-hidden">
+            <div class="h-full bg-[#FFD700] animate-[shimmer_2s_infinite]"></div>
+        </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto space-y-8 pb-32 relative z-10">
+        <header class="flex flex-col items-center gap-4 text-center">
+            <div class="flex flex-col items-center gap-1">
+                <p class="text-[10px] tracking-[0.7em] font-black text-white/30 uppercase italic">High-Speed Kernel Extraction</p>
+                <div class="flex items-center gap-4">
+                    <span class="text-4xl">🌽</span>
+                    <h1 class="text-3xl md:text-5xl font-black brand-text italic tracking-tighter uppercase">Turbo Wallet</h1>
+                    <span class="text-4xl">🌽</span>
+                </div>
             </div>
-            <nav class="flex gap-8 border-b border-slate-800 w-full justify-center">
-                <button onclick="switchTab('vault')" id="tab-vault" class="tab-btn active">Master Vault</button>
-                <button onclick="switchTab('vanity')" id="tab-vanity" class="tab-btn">Vanity Harvest</button>
+            <nav class="flex gap-4 border-b border-zinc-900 w-full justify-center">
+                <button onclick="switchTab('vault')" id="tab-vault" class="tab-btn active">The Silo</button>
+                <button onclick="switchTab('vanity')" id="tab-vanity" class="tab-btn">Turbo Vanity</button>
             </nav>
         </header>
 
-        <!-- MASTER VAULT TAB -->
-        <div id="view-vault" class="space-y-10">
-            <div class="glass p-6 rounded-2xl flex flex-col md:flex-row gap-4 shadow-2xl">
-                <button onclick="generateEverything()" class="btn-primary flex-1 py-5 rounded-xl text-xs tracking-widest font-black">Harvest New Grain</button>
+        <div id="view-vault" class="space-y-6">
+            <div class="glass p-6 rounded-2xl flex flex-col md:flex-row gap-4 border-t-2 border-[#FFD700]">
+                <button onclick="generateEverything()" class="btn-primary flex-1 py-4 rounded-xl text-xs font-black">Generate Root Suite</button>
                 <div class="flex gap-2">
-                    <button onclick="document.getElementById('vault-loader').click()" class="bg-slate-900 border border-slate-800 px-4 py-5 rounded-xl text-[10px] font-bold uppercase text-slate-400 hover:text-white">Load Grain</button>
-                    <button onclick="toggleVisibility()" id="vis-btn" class="bg-slate-950 border border-slate-800 px-6 py-5 rounded-xl text-[10px] font-bold uppercase hover:bg-zinc-900 text-slate-400">Reveal</button>
+                    <button onclick="document.getElementById('vault-loader').click()" class="bg-zinc-900 border border-zinc-700 px-6 py-4 rounded-xl text-[9px] font-bold uppercase text-white hover:border-[#FFD700] transition-all">Import .JSON</button>
+                    <button onclick="toggleVisibility()" id="vis-btn" class="bg-black border border-zinc-800 px-6 py-4 rounded-xl text-[9px] font-bold uppercase text-zinc-500">Reveal</button>
                 </div>
-                <input type="file" id="vault-loader" class="hidden" onchange="loadVault(this)">
+                <input type="file" id="vault-loader" class="hidden" accept=".json" onchange="importVault(this)">
             </div>
             
-            <div id="output-area" class="hidden space-y-8">
-                <section class="glass p-8 rounded-3xl section-card border-l-corn-blue">
-                    <label class="label-accent">Account Address</label>
-                    <div id="addr" class="text-xl md:text-3xl font-black text-white break-all"></div>
+            <div id="output-area" class="hidden space-y-6">
+                <section class="glass p-6 rounded-2xl border-l-4 border-[#FFD700]">
+                    <label class="label-accent">Classic Address</label>
+                    <div id="addr" class="text-xl md:text-2xl font-black text-white break-all"></div>
                 </section>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="glass p-6 rounded-2xl section-card"><label class="label-accent">12-Word</label><div id="m12" class="secret-blur text-xs text-slate-400 min-h-[40px]"></div></div>
-                    <div class="glass p-6 rounded-2xl section-card"><label class="label-accent">16-Word</label><div id="m16" class="secret-blur text-xs text-slate-400 min-h-[40px]"></div></div>
-                    <div class="glass p-6 rounded-2xl section-card"><label class="label-accent">24-Word</label><div id="m24" class="secret-blur text-xs text-slate-400 min-h-[40px]"></div></div>
+                    <div class="glass p-4 rounded-xl"><label class="label-accent">12-Word Phrase</label><div id="m12" class="secret-blur text-[10px] text-zinc-400 break-words"></div></div>
+                    <div class="glass p-4 rounded-xl"><label class="label-accent">16-Word Phrase</label><div id="m16" class="secret-blur text-[10px] text-zinc-400 break-words"></div></div>
+                    <div class="glass p-4 rounded-xl"><label class="label-accent">24-Word Phrase</label><div id="m24" class="secret-blur text-[10px] text-zinc-400 break-words"></div></div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <section class="glass p-8 rounded-3xl section-card">
+                    <section class="glass p-6 rounded-2xl overflow-hidden">
                         <label class="label-accent">Family Seed (s...)</label>
-                        <div id="seed" class="secret-blur text-2xl font-black text-white break-all tracking-tight"></div>
+                        <div id="seed" class="secret-blur text-lg md:text-xl font-black text-white break-all"></div>
                     </section>
-                    <section class="glass p-8 rounded-3xl section-card">
+                    <section class="glass p-6 rounded-2xl">
                         <label class="label-accent">Xaman Secret Numbers</label>
                         <div id="secret-nums-grid" class="secret-blur grid grid-cols-2 gap-2"></div>
                     </section>
                 </div>
-                
-                <div class="glass p-8 rounded-[2.5rem] border-t-2 border-yellow-400 space-y-8 bg-slate-900/80">
-                    <div class="flex flex-col gap-6 items-center">
-                        <div class="text-center">
-                            <label class="label-accent">Vault Encryption Keys</label>
-                            <p class="text-[9px] text-slate-500 uppercase tracking-widest">Required for .JBE Export</p>
-                        </div>
-                        <div class="flex flex-col md:flex-row gap-4 w-full justify-center">
-                            <input type="password" id="pass-1" placeholder="Primary Password" class="input-dark w-full md:w-64 text-center">
-                            <input type="password" id="pass-2" placeholder="Secondary Password" class="input-dark w-full md:w-64 text-center">
-                        </div>
-                        <div class="flex flex-col sm:flex-row gap-4 w-full justify-center pt-4 border-t border-slate-800/50">
-                            <button onclick="exportEncrypted(currentSuite)" class="btn-primary px-10 py-4 rounded-xl text-[10px] font-black">Export .JBE Vault</button>
-                            <button onclick="exportPlaintext(currentSuite)" class="bg-slate-950 text-slate-500 border border-slate-800 px-10 py-4 rounded-xl text-[10px] font-black uppercase">Plain JSON</button>
+
+                <section class="glass p-6 rounded-2xl border border-zinc-800 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-4">
+                        <label class="label-accent">Secure Silo Export</label>
+                        <input type="password" id="pass-a" placeholder="PASSWORD ALPHA" class="input-dark w-full">
+                        <input type="password" id="pass-b" placeholder="PASSWORD BETA" class="input-dark w-full">
+                        <button onclick="exportSecure()" class="w-full bg-[#FFD700] text-black font-black py-3 rounded-lg text-[10px] uppercase">Encrypt & Export</button>
+                    </div>
+                    <div class="space-y-4 border-t md:border-t-0 md:border-l border-zinc-900 pt-4 md:pt-0 md:pl-8">
+                        <label class="label-accent">Standard Backup</label>
+                        <p class="text-[9px] text-zinc-500 uppercase font-bold">Unencrypted JSON data package.</p>
+                        <div class="flex h-full items-end pb-1">
+                            <button onclick="exportPlaintext()" class="w-full border border-zinc-700 text-white font-black py-3 rounded-lg text-[10px] uppercase hover:bg-zinc-900">Download Plaintext</button>
                         </div>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
 
-        <!-- VANITY HARVEST TAB -->
-        <div id="view-vanity" class="hidden space-y-8">
-            <div class="glass p-8 rounded-3xl section-card border-l-yellow-400">
-                <div class="flex flex-col gap-6">
+        <div id="view-vanity" class="hidden space-y-6">
+            <div class="glass p-6 rounded-3xl border-l-4 border-[#FFD700] grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="space-y-4">
+                    <h2 class="text-sm font-black text-[#FFD700] uppercase italic">Turbo Vanity Engine</h2>
                     <div>
-                        <label class="label-accent">Address Prefix (Starts with 'r')</label>
+                        <label class="label-accent">Target Prefix (r...)</label>
                         <div class="flex gap-2">
-                            <span class="bg-slate-900 px-4 py-3 rounded-lg text-yellow-400 font-bold border border-slate-800">r</span>
-                            <input type="text" id="vanity-prefix" placeholder="e.g. Corn" class="input-dark flex-1 uppercase font-bold tracking-widest" maxlength="6">
+                            <span class="bg-zinc-900 px-4 py-3 rounded-lg text-[#FFD700] font-bold border border-zinc-800">r</span>
+                            <input type="text" id="vanity-prefix" placeholder="CORN" class="input-dark flex-1 uppercase font-bold text-sm" maxlength="5">
                         </div>
                     </div>
-                    <div id="vanity-status-box" class="hidden bg-slate-950 p-6 rounded-xl border border-slate-800 text-center space-y-2">
-                        <div id="vanity-counter" class="text-3xl font-black text-yellow-400 tracking-tighter tabular-nums">0</div>
-                        <div class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.3em]">Harvesting Wallets...</div>
+                    <div class="flex flex-col gap-2 bg-black/40 p-3 rounded-xl border border-zinc-800">
+                        <div class="flex items-center justify-between">
+                            <label for="auto-dl" class="text-[9px] uppercase font-black text-zinc-400">Auto-Download</label>
+                            <input type="checkbox" id="auto-dl" class="accent-[#FFD700]">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label class="text-[9px] uppercase font-black text-zinc-400">Worker Count</label>
+                            <span class="text-[10px] text-[#FFD700] font-bold">10 CORES</span>
+                        </div>
                     </div>
-                    <button id="vanity-trigger" onclick="toggleVanitySearch()" class="btn-primary py-5 rounded-xl text-xs tracking-widest font-black">Engage Turbo Harvest</button>
+                    <button id="vanity-trigger" onclick="toggleTurboVanity()" class="btn-primary w-full py-4 rounded-xl text-xs font-black">Engage Harvesting</button>
+                </div>
+                <div class="lg:col-span-2 space-y-2">
+                    <label class="label-accent">Kernel Streaming Nodes</label>
+                    <div id="node-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-2"></div>
+                    <div class="mt-4 p-3 bg-black/60 rounded-xl border border-zinc-800 flex justify-between items-center">
+                        <div>
+                            <span class="label-accent !m-0 !inline-block mr-2">Session Count:</span>
+                            <span id="session-count" class="text-white font-black">0</span>
+                        </div>
+                        <button onclick="downloadAllHarvested()" class="text-[9px] font-black text-[#FFD700] uppercase hover:underline">Download Session Silo (.JSON)</button>
+                    </div>
                 </div>
             </div>
-            <div id="vanity-results" class="grid grid-cols-1 gap-6"></div>
+            
+            <div id="vanity-results" class="grid grid-cols-1 gap-4"></div>
         </div>
-
-        <footer class="text-center pt-16">
-            <p class="text-[12px] font-black uppercase tracking-[0.5em] flash-footer">Powered by Corn</p>
+        
+        <footer class="text-center pt-8">
+            <p class="text-[14px] font-black uppercase tracking-[0.5em] flash-footer">POWERED BY CORN</p>
         </footer>
     </div>
 
     <script>
-        const vanityRegistry = {};
-        let currentSuite = null; let isVisible = false;
-
-        function switchTab(tab) {
-            document.getElementById('view-vault').classList.toggle('hidden', tab !== 'vault');
-            document.getElementById('view-vanity').classList.toggle('hidden', tab !== 'vanity');
-            document.getElementById('tab-vault').classList.toggle('active', tab === 'vault');
-            document.getElementById('tab-vanity').classList.toggle('active', tab === 'vanity');
-        }
-
-        // Particle Background
+        // --- BACKGROUND ---
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
         function initBg() {
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight; particles = [];
-            for(let i=0; i<85; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*30+10, speedX: (Math.random()-0.5)*1, speedY: Math.random()*2+0.5, opacity: Math.random()*0.4+0.1, rot: Math.random()*Math.PI*2, rotVel: (Math.random()-0.5)*0.05 });
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            particles = Array.from({length: 40}, () => ({
+                x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+                size: Math.random()*18+12, vy: Math.random()*1.1+0.4, op: Math.random()*0.25+0.1,
+                rot: Math.random()*Math.PI*2, rv: (Math.random()-0.5)*0.03
+            }));
         }
         function drawBg() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.globalAlpha = p.opacity; ctx.font = `${p.size}px Arial`; ctx.fillText("🌽", -p.size/2, p.size/2); ctx.restore(); p.x += p.speedX; p.y += p.speedY; p.rot += p.rotVel; if(p.y > canvas.height + 50) p.y = -50; if(p.x > canvas.width + 50) p.x = -50; if(p.x < -50) p.x = canvas.width + 50; });
+            ctx.fillStyle = '#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+            particles.forEach(p => {
+                ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+                ctx.globalAlpha = p.op; ctx.font = `${p.size}px serif`; ctx.fillText("🌽", -p.size/2, p.size/2);
+                ctx.restore();
+                p.y += p.vy; if(p.y > canvas.height+50) p.y = -50;
+            });
             requestAnimationFrame(drawBg);
         }
         window.addEventListener('resize', initBg); initBg(); drawBg();
 
-        // Xaman Logic - RESTORED SEPARATE LETTERS AND NUMBERS
-        function deriveXamanSecretNumbers(entropy) {
-            const rows = [];
-            const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-            // 32 bytes entropy / 4 = 8 segments
-            for (let i = 0; i < 8; i++) {
-                const start = i * 4;
-                const segment = (entropy[start] << 24 | entropy[start+1] << 16 | entropy[start+2] << 8 | entropy[start+3]) >>> 0;
-                rows.push({
-                    letter: letters[i],
-                    number: (segment % 1000000).toString().padStart(6, '0')
-                });
-            }
-            return rows;
+        // --- CORE LOGIC ---
+        let currentSuite = null; let activeEntropy = null; let isVisible = false;
+        let sessionHarvest = [];
+
+        function deriveXaman(entropy) {
+            const letters = ['A','B','C','D','E','F','G','H'];
+            return letters.map((l, i) => {
+                const s = i * 4;
+                const n = (entropy[s]<<24 | entropy[s+1]<<16 | entropy[s+2]<<8 | entropy[s+3]) >>> 0;
+                return { letter: l, number: (n % 1000000).toString().padStart(6, '0') };
+            });
         }
 
-        async function deriveFullSuite(entropy) {
-            const mnemonic24 = ethers.utils.entropyToMnemonic(entropy);
-            const wallet = xrpl.Wallet.fromMnemonic(mnemonic24, { algorithm: "ecdsa-secp256k1" });
-            const secretNumbers = deriveXamanSecretNumbers(entropy);
-            let familySeed = wallet.seed || xrpl.Wallet.generate("ecdsa-secp256k1").seed;
-
+        async function deriveFullSuite(entropyArray) {
+            const entropy = new Uint8Array(entropyArray);
+            const wallet = xrpl.Wallet.fromEntropy(entropy.slice(0, 16));
             return { 
                 address: wallet.classicAddress, 
-                m24: mnemonic24, 
-                m12: ethers.utils.entropyToMnemonic(entropy.slice(0, 16)), 
-                m16: ethers.utils.entropyToMnemonic(entropy.slice(0, 24)).split(' ').slice(0, 16).join(' '), 
-                seed: familySeed, 
-                secretNumbers: secretNumbers,
-                priv: wallet.privateKey, 
-                pub: wallet.publicKey,
-                entropy: ethers.utils.hexlify(entropy)
+                seed: wallet.seed, 
+                entropy: Array.from(entropy),
+                m12: ethers.utils.entropyToMnemonic(entropy.slice(0, 16)),
+                m16: ethers.utils.entropyToMnemonic(entropy.slice(0, 24)),
+                m24: ethers.utils.entropyToMnemonic(entropy),
+                xaman: deriveXaman(entropy),
+                timestamp: new Date().toISOString()
             };
         }
 
         async function generateEverything() {
-            try {
-                const entropy = crypto.getRandomValues(new Uint8Array(32));
-                currentSuite = await deriveFullSuite(entropy);
-                render(); 
-                document.getElementById('output-area').classList.remove('hidden'); 
-                isVisible = false; 
-                toggleVisibility();
-            } catch (e) { alert("Harvest Error: " + e.message); }
+            const e = crypto.getRandomValues(new Uint8Array(32));
+            currentSuite = await deriveFullSuite(e);
+            activeEntropy = new Uint8Array(currentSuite.entropy);
+            renderVault();
+            document.getElementById('output-area').classList.remove('hidden');
+            isVisible = false; toggleVisibility();
         }
 
-        function render() {
-            document.getElementById('addr').innerText = currentSuite.address; 
-            document.getElementById('m12').innerText = currentSuite.m12; 
-            document.getElementById('m16').innerText = currentSuite.m16; 
-            document.getElementById('m24').innerText = currentSuite.m24; 
+        function renderVault() {
+            if(!currentSuite) return;
+            document.getElementById('addr').innerText = currentSuite.address;
+            document.getElementById('m12').innerText = currentSuite.m12;
+            document.getElementById('m16').innerText = currentSuite.m16;
+            document.getElementById('m24').innerText = currentSuite.m24;
             document.getElementById('seed').innerText = currentSuite.seed;
-            
-            const grid = document.getElementById('secret-nums-grid');
-            grid.innerHTML = currentSuite.secretNumbers.map(row => `
-                <div class="xaman-row">
-                    <span class="xaman-letter">${row.letter}</span>
-                    <span class="xaman-number">${row.number}</span>
-                </div>
+            document.getElementById('secret-nums-grid').innerHTML = currentSuite.xaman.map(r => `
+                <div class="xaman-row"><span class="xaman-letter">${r.letter}</span><span class="xaman-number">${r.number}</span></div>
             `).join('');
         }
 
-        function toggleVisibility() {
-            isVisible = !isVisible;
-            document.querySelectorAll('#view-vault .secret-blur, #view-vault .secret-visible').forEach(el => {
-                if (isVisible) { el.classList.remove('secret-blur'); el.classList.add('secret-visible'); }
-                else { el.classList.remove('secret-visible'); el.classList.add('secret-blur'); }
+        // --- IO & EXPORTS ---
+        function triggerDownload(data, name) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+        }
+
+        async function exportSecure() {
+            const pA = document.getElementById('pass-a').value;
+            const pB = document.getElementById('pass-b').value;
+            if(!pA || !pB || pA === pB) return alert("Two unique passwords required.");
+            showOverlay("Harvesting Encrypted Data...");
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const keyHex = await hashwasm.argon2id({
+                password: pA + "::" + pB, salt: salt, parallelism: 1, iterations: 4, memorySize: 65536, hashLength: 32, outputType: 'hex'
             });
-            document.getElementById('vis-btn').innerText = isVisible ? "Hide" : "Reveal";
+            const entropyHex = Array.from(activeEntropy).map(b => b.toString(16).padStart(2, '0')).join('');
+            const encrypted = CryptoJS.AES.encrypt(entropyHex, keyHex).toString();
+            triggerDownload({
+                metadata: { app: "TURBO-WALLET", version: "MASTER-CORN", address: currentSuite.address },
+                crypto: { salt: Array.from(salt), payload: encrypted },
+            }, `TURBO_MASTER_${currentSuite.address}.json`);
+            hideOverlay();
         }
 
-        // Vanity Logic
-        let vanitySearching = false; let scanCount = 0;
-        async function toggleVanitySearch() {
-            const prefix = document.getElementById('vanity-prefix').value.trim();
-            if (!vanitySearching && !prefix) return alert("Prefix required.");
-            vanitySearching = !vanitySearching;
-            const btn = document.getElementById('vanity-trigger');
-            if (vanitySearching) { btn.innerText = "Halt Harvest"; btn.classList.replace('btn-primary', 'bg-red-600'); document.getElementById('vanity-status-box').classList.remove('hidden'); scanCount = 0; runTurboLoop(prefix); }
-            else { btn.innerText = "Engage Turbo Harvest"; btn.classList.replace('bg-red-600', 'btn-primary'); }
+        function exportPlaintext() {
+            if(!activeEntropy) return;
+            triggerDownload({
+                metadata: { app: "TURBO-WALLET", address: currentSuite.address },
+                payload: { entropy: Array.from(activeEntropy), suite: currentSuite }
+            }, `TURBO_BACKUP_${currentSuite.address}.json`);
         }
 
-        async function runTurboLoop(prefix) {
-            const fullPrefix = 'r' + prefix;
-            const counterEl = document.getElementById('vanity-counter');
-            while (vanitySearching) {
-                for (let i = 0; i < 30; i++) {
-                    const entropy = crypto.getRandomValues(new Uint8Array(32));
-                    const m = ethers.utils.entropyToMnemonic(entropy);
-                    const wallet = xrpl.Wallet.fromMnemonic(m, { algorithm: "ecdsa-secp256k1" });
-                    if (wallet.classicAddress.startsWith(fullPrefix)) {
-                        const suite = await deriveFullSuite(entropy);
-                        addResult(suite);
-                    }
-                }
-                scanCount += 30; if (scanCount % 90 === 0) counterEl.innerText = scanCount.toLocaleString();
-                await new Promise(r => setTimeout(r, 0));
+        function downloadAllHarvested() {
+            if(sessionHarvest.length === 0) return alert("Silo is empty.");
+            triggerDownload({
+                metadata: { app: "TURBO-SESSION-EXPORT", count: sessionHarvest.length, timestamp: new Date().toISOString() },
+                harvest: sessionHarvest
+            }, `TURBO_SESSION_SILO_${Date.now()}.json`);
+        }
+
+        async function importVault(input) {
+            const file = input.files[0]; if(!file) return;
+            const text = await file.text(); const data = JSON.parse(text);
+            if(data.crypto) {
+                const pA = prompt("ENTER PASSWORD ALPHA:"); const pB = prompt("ENTER PASSWORD BETA:");
+                showOverlay("Threshing Vault...");
+                const keyHex = await hashwasm.argon2id({
+                    password: pA + "::" + pB, salt: new Uint8Array(data.crypto.salt), parallelism: 1, iterations: 4, memorySize: 65536, hashLength: 32, outputType: 'hex'
+                });
+                try {
+                    const bytes = CryptoJS.AES.decrypt(data.crypto.payload, keyHex);
+                    const hex = bytes.toString(CryptoJS.enc.Utf8);
+                    const entropy = new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                    currentSuite = await deriveFullSuite(entropy);
+                    activeEntropy = entropy;
+                    renderVault();
+                    document.getElementById('output-area').classList.remove('hidden');
+                } catch(e) { alert("Invalid Credentials."); }
+                hideOverlay();
+            } else {
+                activeEntropy = new Uint8Array(data.payload.entropy);
+                currentSuite = await deriveFullSuite(activeEntropy);
+                renderVault(); document.getElementById('output-area').classList.remove('hidden');
             }
         }
 
-        function addResult(suite) {
-            const res = document.getElementById('vanity-results');
-            const cardId = `v-${Date.now()}`;
-            vanityRegistry[cardId] = suite;
-            const div = document.createElement('div');
-            div.className = "glass p-6 rounded-3xl border border-yellow-400/20 space-y-6 animate-in fade-in slide-in-from-top-4 shadow-xl";
-            div.innerHTML = `
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-4 gap-4">
-                    <div class="flex items-center gap-2"><span class="text-xl">🌽</span><span class="text-[10px] font-black text-yellow-400 uppercase italic">Vanity Match</span></div>
-                    <div class="flex gap-2">
-                        <button onclick="exportEncryptedById('${cardId}')" class="text-[8px] bg-yellow-400 text-black px-3 py-2 rounded-lg font-black uppercase">Export .JBE</button>
-                        <button onclick="exportPlaintextById('${cardId}')" class="text-[8px] bg-slate-900 border border-slate-700 text-slate-400 px-3 py-2 rounded-lg font-black uppercase">JSON</button>
-                        <button onclick="toggleCardSecrets('${cardId}')" class="text-[8px] bg-slate-950 border border-slate-800 text-slate-500 px-3 py-2 rounded-lg font-bold hover:text-white">Reveal</button>
-                    </div>
-                </div>
-                <div><label class="label-accent">Address</label><div class="text-xl font-black text-white break-all select-all">${suite.address}</div></div>
-                <div id="${cardId}" class="secret-blur space-y-6 pt-2 border-t border-slate-800/50">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800"><label class="label-accent">12-Word</label><div class="text-[10px] text-slate-400">${suite.m12}</div></div>
-                        <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800"><label class="label-accent">16-Word</label><div class="text-[10px] text-slate-400">${suite.m16}</div></div>
-                        <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800"><label class="label-accent">24-Word</label><div class="text-[10px] text-slate-400">${suite.m24}</div></div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-slate-950/50 p-4 rounded-xl border border-slate-800"><label class="label-accent">Family Seed</label><div class="text-lg font-black text-white break-all">${suite.seed}</div></div>
-                        <div class="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
-                            <label class="label-accent">Xaman Secret Numbers</label>
-                            <div class="grid grid-cols-2 gap-2 mt-2">
-                                ${suite.secretNumbers.map(row => `
-                                    <div class="xaman-row scale-90 origin-left">
-                                        <span class="xaman-letter">${row.letter}</span>
-                                        <span class="xaman-number">${row.number}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            res.prepend(div);
-        }
-
-        function toggleCardSecrets(id) {
-            const el = document.getElementById(id);
-            el.classList.toggle('secret-blur'); el.classList.toggle('secret-visible');
-        }
-
-        // Shared Logic
-        function exportEncryptedById(id) { exportEncrypted(vanityRegistry[id]); }
-        function exportPlaintextById(id) { exportPlaintext(vanityRegistry[id]); }
-
-        async function exportEncrypted(suite) {
-            if (!suite) return;
-            const p1 = document.getElementById('pass-1').value; const p2 = document.getElementById('pass-2').value;
-            if (!p1 || !p2) return alert("Enter Primary & Secondary passwords in the Master Vault tab first.");
-            try {
-                const salt = CryptoJS.lib.WordArray.random(16).toString();
-                const keyHash = await argon2.hash({ pass: `${p1}:${p2}`, salt: salt, time: 3, mem: 65536, hashLen: 32, type: argon2.ArgonType.Argon2id });
-                const ciphertext = CryptoJS.AES.encrypt(JSON.stringify(suite), keyHash.hashHex).toString();
-                download(JSON.stringify({ version: "1.0", salt, data: ciphertext }), `Corn_Vault_${suite.address.slice(0,8)}.jbe`);
-            } catch (e) { alert("Encryption Failed"); }
-        }
-
-        function exportPlaintext(suite) { if (suite) download(JSON.stringify(suite, null, 2), `Corn_Suite_${suite.address.slice(0,8)}.json`); }
-        function download(content, filename) { const blob = new Blob([content], { type: "application/json" }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); }
-        async function loadVault(input) {
-            const file = input.files[0]; if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const raw = JSON.parse(e.target.result);
-                    if (raw.address && raw.seed) currentSuite = raw;
-                    else if (raw.data && raw.salt) {
-                        const p1 = prompt("Password 1:"), p2 = prompt("Password 2:");
-                        const keyHash = await argon2.hash({ pass: `${p1}:${p2}`, salt: raw.salt, time: 3, mem: 65536, hashLen: 32, type: argon2.ArgonType.Argon2id });
-                        currentSuite = JSON.parse(CryptoJS.AES.decrypt(raw.data, keyHash.hashHex).toString(CryptoJS.enc.Utf8));
+        // --- VANITY ENGINE MASTER ---
+        const workerCode = `
+            importScripts('https://cdn.jsdelivr.net/npm/xrpl@4.0.0/build/xrpl-latest-min.js');
+            self.onmessage = function(e) {
+                const { prefix, batchSize } = e.data;
+                const fullPrefix = 'r' + prefix;
+                while (true) {
+                    for (let i = 0; i < batchSize; i++) {
+                        const entropy = crypto.getRandomValues(new Uint8Array(32));
+                        const wallet = xrpl.Wallet.fromEntropy(entropy.slice(0,16));
+                        if (i % 40 === 0) self.postMessage({ type: 'STREAM', address: wallet.classicAddress });
+                        if (wallet.classicAddress.startsWith(fullPrefix)) {
+                            self.postMessage({ type: 'MATCH', entropy: Array.from(entropy) });
+                        }
                     }
-                    render(); document.getElementById('output-area').classList.remove('hidden'); isVisible = true; toggleVisibility();
-                } catch (err) { alert("Unlock failed."); }
-            }; reader.readAsText(file);
+                }
+            };
+        `;
+        const workerUrl = URL.createObjectURL(new Blob([workerCode]));
+        let workers = []; let isSearching = false; const nodeEls = [];
+        const nodeGrid = document.getElementById('node-grid');
+        for(let i=0; i<10; i++){
+            const div = document.createElement('div');
+            div.className = "bg-[#080800] border border-zinc-900 rounded p-1 flex items-center justify-center h-8";
+            div.innerHTML = `<div id="stream-${i}" class="text-[7px] text-zinc-800 break-all text-center">OFFLINE</div>`;
+            nodeGrid.appendChild(div); nodeEls.push(document.getElementById(`stream-${i}`));
+        }
+
+        function toggleTurboVanity() {
+            const p = document.getElementById('vanity-prefix').value.trim().toUpperCase();
+            if(!isSearching && !p) return;
+            isSearching = !isSearching;
+            const btn = document.getElementById('vanity-trigger');
+            if(isSearching) {
+                btn.innerText = "Halt Harvest"; btn.style.background = "#441100";
+                for(let i=0; i<10; i++) {
+                    const w = new Worker(workerUrl);
+                    w.onmessage = (e) => {
+                        if(e.data.type === 'STREAM') { nodeEls[i].innerText = e.data.address; nodeEls[i].style.color = "#FFD700"; }
+                        else if(e.data.type === 'MATCH') { 
+                            deriveFullSuite(e.data.entropy).then(s => processMatch(s)); 
+                        }
+                    };
+                    w.postMessage({prefix: p, batchSize: 75}); workers.push(w);
+                }
+            } else {
+                btn.innerText = "Engage Harvesting"; btn.style.background = "";
+                workers.forEach((w, i) => { w.terminate(); nodeEls[i].innerText = "OFFLINE"; nodeEls[i].style.color = "#222"; });
+                workers = [];
+            }
+        }
+
+        function processMatch(suite) {
+            sessionHarvest.push(suite);
+            document.getElementById('session-count').innerText = sessionHarvest.length;
+            if(document.getElementById('auto-dl').checked) {
+                triggerDownload({ metadata: { type: "AUTO-HARVEST" }, payload: suite }, `CORN_MATCH_${suite.address}.json`);
+            }
+            addResultToUI(suite);
+        }
+
+        function addResultToUI(suite) {
+            const container = document.getElementById('vanity-results');
+            const div = document.createElement('div');
+            div.className = "glass p-5 rounded-2xl border-l-4 border-[#FFD700] space-y-4 animate-in fade-in slide-in-from-top-4 duration-500";
+            
+            const xamanHtml = suite.xaman.map(r => `
+                <div class="xaman-row"><span class="xaman-letter">${r.letter}</span><span class="xaman-number">${r.number}</span></div>
+            `).join('');
+
+            div.innerHTML = `
+                <div class="flex justify-between items-center border-b border-zinc-900 pb-3">
+                    <div>
+                        <label class="label-accent">Kernel Match Found</label>
+                        <div class="text-white font-black text-xs md:text-sm break-all">${suite.address}</div>
+                    </div>
+                    <button onclick="downloadSpecific('${suite.address}')" class="bg-[#FFD700] text-black text-[9px] px-4 py-2 rounded-lg font-black uppercase hover:opacity-80 transition-opacity">Save Silo</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="bg-black/50 p-2 rounded-lg border border-zinc-800"><label class="label-accent">12-Word</label><div class="text-[9px] text-zinc-400 break-words">${suite.m12}</div></div>
+                    <div class="bg-black/50 p-2 rounded-lg border border-zinc-800"><label class="label-accent">16-Word</label><div class="text-[9px] text-zinc-400 break-words">${suite.m16}</div></div>
+                    <div class="bg-black/50 p-2 rounded-lg border border-zinc-800"><label class="label-accent">24-Word</label><div class="text-[9px] text-zinc-400 break-words">${suite.m24}</div></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div><label class="label-accent">Family Seed (s...)</label><div class="text-[10px] text-white break-all font-bold p-2 bg-black/40 rounded border border-zinc-900">${suite.seed}</div></div>
+                    <div><label class="label-accent">Xaman Secret Clusters</label><div class="grid grid-cols-4 gap-1">${xamanHtml}</div></div>
+                </div>
+                <input type="hidden" id="raw-${suite.address}" value='${JSON.stringify(suite)}'>
+            `;
+            container.prepend(div);
+            // Optimization: Keep only last 50 matches in DOM to prevent lag
+            if(container.children.length > 50) container.removeChild(container.lastChild);
+        }
+
+        function downloadSpecific(addr) {
+            const data = JSON.parse(document.getElementById(`raw-${addr}`).value);
+            triggerDownload({ metadata: { type: "SPECIFIC-SILO-MATCH" }, payload: data }, `SILO_${addr}.json`);
+        }
+
+        // --- UTILS ---
+        function showOverlay(msg) { document.getElementById('overlay-msg').innerText = msg; document.getElementById('status-overlay').style.display = 'flex'; }
+        function hideOverlay() { document.getElementById('status-overlay').style.display = 'none'; }
+        function toggleVisibility() {
+            isVisible = !isVisible;
+            document.querySelectorAll('.secret-blur, .secret-visible').forEach(el => {
+                el.classList.toggle('secret-blur', !isVisible); el.classList.toggle('secret-visible', isVisible);
+            });
+            document.getElementById('vis-btn').innerText = isVisible ? "Hide Secrets" : "Reveal Secrets";
+        }
+        function switchTab(t) {
+            document.getElementById('view-vault').classList.toggle('hidden', t !== 'vault');
+            document.getElementById('view-vanity').classList.toggle('hidden', t !== 'vanity');
+            document.getElementById('tab-vault').classList.toggle('active', t === 'vault');
+            document.getElementById('tab-vanity').classList.toggle('active', t === 'vanity');
         }
     </script>
 </body>
