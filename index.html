@@ -10,146 +10,133 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --c-gold: #FFD700; --c-amber: #FFA500; --glow-soft: 0 0 15px rgba(255, 215, 0, 0.3); --glow-hard: 0 0 25px rgba(255, 215, 0, 0.6); }
+        :root { --c-gold: #FFD700; --c-amber: #FFA500; --glow: 0 0 20px rgba(255, 215, 0, 0.4); }
         body { background-color: #000; color: #fff; font-family: 'Space Mono', monospace; overflow-x: hidden; margin: 0; }
         #fx-canvas { position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.5; }
         
         .brand-font { font-family: 'Fredoka One', cursive; }
-        .brand-text { color: var(--c-gold); text-shadow: 3px 3px 0px rgba(139, 69, 19, 0.5); }
+        .brand-text { color: var(--c-gold); text-shadow: 3px 3px 0px rgba(139, 69, 19, 0.6); }
 
-        /* Deluxe Containers */
         .glass { 
-            background: rgba(12, 12, 8, 0.96); 
-            border: 3px solid rgba(255, 215, 0, 0.2); 
-            border-radius: 28px; 
-            box-shadow: 0 15px 50px rgba(0,0,0,0.9);
-            transition: border-color 0.3s;
+            background: rgba(10, 10, 5, 0.98); 
+            border: 3px solid rgba(255, 215, 0, 0.25); 
+            border-radius: 32px; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.9);
         }
-        .glass:hover { border-color: rgba(255, 215, 0, 0.4); }
 
-        /* Glowing Interactive Elements */
+        /* Glowing Effects */
         .btn-glow {
             background: linear-gradient(180deg, var(--c-gold) 0%, var(--c-amber) 100%);
             color: #4b2c00;
             font-family: 'Fredoka One', cursive;
-            border-bottom: 4px solid #b8860b;
+            border-bottom: 5px solid #b8860b;
             border-radius: 20px;
-            box-shadow: var(--glow-soft);
+            box-shadow: var(--glow);
             transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             cursor: pointer;
             text-transform: uppercase;
         }
-        .btn-glow:hover { transform: scale(1.03); box-shadow: var(--glow-hard); filter: brightness(1.1); }
-        .btn-glow:active { transform: translateY(3px); border-bottom-width: 1px; }
+        .btn-glow:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(255, 215, 0, 0.7); filter: brightness(1.1); }
+        .btn-glow:active { transform: translateY(4px); border-bottom-width: 1px; }
 
         .btn-outline-glow {
             border: 2px solid rgba(255, 215, 0, 0.3);
             color: var(--c-gold);
             font-family: 'Fredoka One', cursive;
             border-radius: 18px;
-            transition: 0.2s;
+            transition: 0.3s;
             text-transform: uppercase;
+            box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.1);
         }
-        .btn-outline-glow:hover { 
-            background: rgba(255, 215, 0, 0.1); 
-            border-color: var(--c-gold);
-            box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.2);
-        }
+        .btn-outline-glow:hover { border-color: var(--c-gold); box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); background: rgba(255,215,0,0.05); }
 
         .label-accent { color: var(--c-gold); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
-        .secret-blur { filter: blur(15px); transition: filter 0.4s ease; cursor: pointer; }
+        .secret-blur { filter: blur(16px); transition: filter 0.4s ease; cursor: pointer; }
         .secret-visible { filter: none !important; }
 
-        /* Form Elements */
         .input-dual {
-            background: #000;
-            border: 2px solid #222;
-            border-radius: 16px;
-            color: var(--c-gold);
-            outline: none;
-            padding: 14px;
-            width: 100%;
-            font-family: 'Space Mono', monospace;
+            background: #000; border: 2px solid #222; border-radius: 18px;
+            color: var(--c-gold); outline: none; padding: 16px;
+            width: 100%; font-family: 'Space Mono', monospace;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
-        .input-dual:focus { border-color: var(--c-gold); box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); }
+        .input-dual:focus { border-color: var(--c-gold); box-shadow: 0 0 15px rgba(255, 215, 0, 0.25); }
 
-        /* Animation */
-        @keyframes pulse-gold { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
-        .active-pip { background: var(--c-gold); box-shadow: 0 0 12px var(--c-gold); animation: pulse-gold 0.5s infinite; }
-
-        #modal-overlay { background: rgba(0,0,0,0.92); backdrop-filter: blur(12px); display: none; }
+        .modal-overlay { background: rgba(0,0,0,0.94); backdrop-filter: blur(15px); display: none; position: fixed; inset: 0; z-index: 100; align-items: center; justify-content: center; padding: 20px; }
     </style>
 </head>
 <body class="p-4 md:p-10 min-h-screen flex flex-col items-center">
     <canvas id="fx-canvas"></canvas>
 
     <div class="w-full max-w-4xl space-y-8 relative z-10">
-        <header class="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/10 pb-6">
+        <header class="flex flex-col md:flex-row justify-between items-center gap-6">
             <div class="text-center md:text-left">
-                <h1 class="text-5xl md:text-7xl brand-font brand-text italic leading-tight">CORN SILO</h1>
-                <p class="text-[11px] font-black text-white/30 uppercase tracking-[0.6em]">Two-Password Secure Terminal</p>
+                <h1 class="text-6xl md:text-7xl brand-font brand-text italic">CORN SILO</h1>
+                <p class="text-[11px] font-black text-white/30 uppercase tracking-[0.5em] mt-2">The Dual-Password 24-Word Extraction Unit</p>
             </div>
-            <nav class="flex glass p-2 rounded-full px-4 border-2">
-                <button onclick="switchTab('vault')" id="tab-vault" class="tab-btn brand-font px-6 py-2 text-zinc-500 active">Terminal</button>
+            <nav class="flex glass p-2 rounded-full border-2 border-amber-500/20">
+                <button onclick="switchTab('vault')" id="tab-vault" class="tab-btn brand-font px-6 py-2 text-amber-400">Vault</button>
                 <button onclick="switchTab('vanity')" id="tab-vanity" class="tab-btn brand-font px-6 py-2 text-zinc-500">Engine</button>
             </nav>
         </header>
 
         <!-- TERMINAL -->
         <div id="view-vault" class="space-y-6">
-            <div class="glass p-10 flex flex-col md:flex-row gap-8 items-center border-b-8 border-amber-500/20">
-                <button onclick="generateNew()" class="btn-glow px-12 py-6 text-xl w-full md:w-auto">Harvest New Seed</button>
+            <div class="glass p-10 flex flex-col md:flex-row gap-8 items-center border-b-8 border-amber-500/10">
+                <button onclick="generateNew()" class="btn-glow px-12 py-6 text-xl w-full md:w-auto">Harvest Suite</button>
                 <div class="flex flex-wrap justify-center gap-6">
-                    <button onclick="toggleVisibility()" id="vis-btn" class="text-[10px] font-black uppercase text-zinc-500 hover:text-amber-400">View Secret</button>
-                    <button onclick="exportRaw()" class="text-[10px] font-black uppercase text-zinc-500 hover:text-white">Export Raw</button>
-                    <button onclick="openSecureModal()" class="text-[10px] font-black uppercase text-amber-500 hover:text-amber-300 font-bold">Secure Export</button>
+                    <label class="btn-outline-glow px-6 py-4 text-[10px] cursor-pointer flex items-center">
+                        Open JSON <input type="file" id="import-file" class="hidden" accept=".json">
+                    </label>
+                    <button onclick="exportRaw()" class="text-[10px] font-black uppercase text-zinc-500 hover:text-white">Save Raw</button>
+                    <button onclick="openModal('encrypt')" class="text-[10px] font-black uppercase text-amber-500 hover:brightness-125 font-bold">Save Secure</button>
+                    <button onclick="toggleVisibility()" id="vis-btn" class="text-[10px] font-black uppercase text-zinc-500 hover:text-amber-400">Reveal</button>
                 </div>
             </div>
             
-            <div id="output-area" class="hidden space-y-4 animate-in fade-in duration-500">
+            <div id="output-area" class="hidden space-y-4">
                 <section class="glass p-8">
-                    <label class="label-accent"><span>🌽</span> Terminal Address</label>
-                    <div id="addr" class="text-2xl md:text-4xl font-bold text-white break-all tracking-tighter"></div>
+                    <label class="label-accent"><span>🌽</span> Address</label>
+                    <div id="addr" class="text-2xl md:text-4xl font-bold text-white break-all tracking-tight"></div>
                 </section>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <section class="glass p-8">
                         <label class="label-accent"><span>🔑</span> Family Seed</label>
                         <div id="seed" class="secret-blur text-xl font-bold text-amber-400 break-all"></div>
                     </section>
-                    <section class="glass p-8 flex flex-col justify-center items-center text-center bg-amber-500/5">
-                        <div class="text-[10px] text-zinc-600 font-black uppercase mb-1">Mnemonic Standard</div>
-                        <div class="text-white font-black text-2xl tracking-widest">24 WORDS</div>
+                    <section class="glass p-8 flex flex-col justify-center items-center text-center">
+                        <div class="text-[10px] text-zinc-600 font-bold uppercase">Security Level</div>
+                        <div class="text-[#FFD700] font-black text-2xl tracking-tighter">ARGON2 DUAL</div>
                     </section>
                 </div>
                 <section class="glass p-8">
-                    <label class="label-accent"><span>📜</span> Master Mnemonic Phrase</label>
-                    <div class="bg-black/40 p-6 rounded-2xl border-2 border-dashed border-amber-500/20">
-                        <div id="words" class="secret-blur text-sm md:text-base text-zinc-300 leading-loose tracking-widest text-center uppercase"></div>
+                    <label class="label-accent"><span>📜</span> 24-Word Master Phrase</label>
+                    <div class="bg-black/50 p-6 rounded-2xl border-2 border-dashed border-amber-500/20">
+                        <div id="words" class="secret-blur text-sm md:text-base text-zinc-300 leading-relaxed text-center uppercase tracking-widest"></div>
                     </div>
                 </section>
             </div>
         </div>
 
-        <!-- ENGINE -->
+        <!-- TURBO ENGINE -->
         <div id="view-vanity" class="hidden space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="glass p-8 space-y-8 flex flex-col justify-center border-l-8 border-amber-500">
+                <div class="glass p-8 space-y-8 flex flex-col justify-center">
                     <div>
-                        <label class="label-accent">Search Prefix</label>
-                        <div class="flex bg-black rounded-2xl overflow-hidden border-2 border-zinc-800 focus-within:border-amber-500 transition-colors">
-                            <span class="px-5 py-4 bg-zinc-900 text-zinc-500 font-bold text-xl">r</span>
+                        <label class="label-accent">Target r-Prefix</label>
+                        <div class="flex bg-black rounded-2xl overflow-hidden border-2 border-zinc-800">
+                            <span class="px-5 py-4 bg-zinc-900 text-zinc-500 font-bold">r</span>
                             <input type="text" id="vanity-prefix" placeholder="CORN" class="bg-transparent w-full px-2 py-4 outline-none text-amber-400 font-bold uppercase text-2xl" maxlength="6">
                         </div>
                     </div>
-                    <button id="vanity-trigger" onclick="toggleVanity()" class="btn-glow py-6 text-xl rounded-2xl">Engage Turbines</button>
+                    <button id="vanity-trigger" onclick="toggleVanity()" class="btn-glow py-6 text-xl">Engage Turbines</button>
                 </div>
                 <div class="lg:col-span-2 glass p-8">
-                    <label class="label-accent">Processor Array</label>
-                    <div id="node-grid" class="flex flex-wrap gap-3 mb-8 justify-center"></div>
+                    <label class="label-accent">Mining Core Activity</label>
+                    <div id="node-grid" class="flex flex-wrap gap-2 mb-8 justify-center"></div>
                     <div class="flex justify-between items-center border-t border-white/5 pt-6">
-                        <div class="text-[11px] font-black text-zinc-500 uppercase">Found: <span id="session-count" class="text-amber-400">0</span></div>
-                        <div id="total-attempts" class="text-[11px] font-black text-zinc-500 uppercase tracking-widest">Cycles: 0</div>
+                        <div class="text-[11px] font-black text-zinc-500 uppercase">Matches: <span id="session-count" class="text-amber-400">0</span></div>
+                        <div id="total-attempts" class="text-[11px] font-black text-zinc-500 uppercase">Total Attempts: 0</div>
                     </div>
                 </div>
             </div>
@@ -157,43 +144,43 @@
         </div>
     </div>
 
-    <!-- SECURITY MODAL: DUAL PASSPHRASE -->
-    <div id="modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="glass p-10 max-w-lg w-full space-y-8 text-center border-4 border-amber-500/40">
-            <h2 class="brand-font text-4xl text-amber-400 tracking-tight">TWO-PASS VAULT</h2>
-            <p class="text-[10px] text-zinc-500 uppercase font-black tracking-[0.3em]">Dual Argon2id + AES-256-GCM</p>
+    <!-- SECURITY MODAL (ENCRYPT / DECRYPT) -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="glass p-10 max-w-lg w-full space-y-8 text-center border-4 border-amber-500/30">
+            <h2 id="modal-title" class="brand-font text-4xl text-amber-400 italic">SECURE GATE</h2>
+            <p id="modal-desc" class="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Two-Pass Identity Verification</p>
             
             <div class="space-y-4">
-                <input type="password" id="pass-1" placeholder="Primary Passphrase" class="input-dual">
-                <input type="password" id="pass-2" placeholder="Secondary Passphrase" class="input-dual">
+                <input type="password" id="pass-1" placeholder="Passphrase One" class="input-dual">
+                <input type="password" id="pass-2" placeholder="Passphrase Two" class="input-dual">
             </div>
 
-            <div id="secure-status" class="text-[10px] font-black uppercase text-amber-500/60 h-4">Standing by...</div>
+            <div id="modal-status" class="text-[10px] font-bold text-amber-500 h-4"></div>
             
-            <div class="grid grid-cols-2 gap-4 pt-4">
-                <button onclick="closeSecureModal()" class="btn-outline-glow py-5 text-xs">Abandom</button>
-                <button id="confirm-encrypt" onclick="processSecureExport()" class="btn-glow py-5 rounded-2xl text-xs">Seal & Save</button>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="closeModal()" class="btn-outline-glow py-5 text-xs">Cancel</button>
+                <button id="modal-action-btn" class="btn-glow py-5 rounded-2xl text-xs">Execute</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- VISUAL ENGINE ---
+        // --- VISUALS ---
         const canvas = document.getElementById('fx-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
         function initBg() {
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            particles = Array.from({length: 25}, () => ({
+            particles = Array.from({length: 22}, () => ({
                 x: Math.random()*canvas.width, y: Math.random()*canvas.height,
-                size: Math.random()*15+15, vy: Math.random()*0.4+0.1, rot: Math.random()*6, rv: (Math.random()-0.5)*0.01
+                size: Math.random()*15+15, vy: Math.random()*0.5+0.1, rot: Math.random()*6, rv: (Math.random()-0.5)*0.01
             }));
         }
         function drawBg() {
             ctx.clearRect(0,0,canvas.width,canvas.height);
             particles.forEach(p => {
                 ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
-                ctx.globalAlpha = 0.25; ctx.font = p.size + "px serif"; ctx.fillText("🌽", 0, 0);
+                ctx.globalAlpha = 0.2; ctx.font = p.size + "px serif"; ctx.fillText("🌽", 0, 0);
                 ctx.restore();
                 p.y += p.vy; p.rot += p.rv; if(p.y > canvas.height+30) p.y = -30;
             });
@@ -201,11 +188,13 @@
         }
         window.addEventListener('resize', initBg); initBg(); drawBg();
 
-        // --- CORE LOGIC ---
+        // --- STATE ---
         let currentWallet = null;
         let isVisible = false;
         let harvestBin = [];
+        let pendingJsonData = null;
 
+        // --- WALLET CORE ---
         async function generateNew() {
             const entropy = crypto.getRandomValues(new Uint8Array(32));
             const wallet = xrpl.Wallet.fromEntropy(entropy.slice(0, 16)); 
@@ -224,90 +213,151 @@
         function applyVisibility() {
             document.querySelectorAll('.secret-blur, .secret-visible').forEach(el => {
                 el.className = isVisible ? 'secret-visible' : 'secret-blur';
-                if(el.id === 'words') el.classList.add('text-sm', 'md:text-base', 'text-zinc-300', 'leading-loose', 'tracking-widest', 'text-center', 'uppercase');
+                if(el.id === 'words') el.classList.add('text-sm', 'md:text-base', 'text-zinc-300', 'leading-relaxed', 'text-center', 'uppercase', 'tracking-widest');
                 else el.classList.add('font-bold', 'text-amber-400', 'break-all');
             });
-            document.getElementById('vis-btn').innerText = isVisible ? "Hide Secret" : "View Secret";
+            document.getElementById('vis-btn').innerText = isVisible ? "Hide" : "Reveal";
         }
 
         function toggleVisibility() { isVisible = !isVisible; applyVisibility(); }
-        
         function switchTab(t) {
             document.getElementById('view-vault').classList.toggle('hidden', t !== 'vault');
             document.getElementById('view-vanity').classList.toggle('hidden', t !== 'vanity');
-            document.querySelectorAll('.tab-btn').forEach(b => {
-                const active = b.id === 'tab-' + t;
-                b.classList.toggle('text-zinc-500', !active);
-                b.classList.toggle('text-amber-400', active);
+            document.getElementById('tab-vault').className = t === 'vault' ? 'tab-btn brand-font px-6 py-2 text-amber-400' : 'tab-btn brand-font px-6 py-2 text-zinc-500';
+            document.getElementById('tab-vanity').className = t === 'vanity' ? 'tab-btn brand-font px-6 py-2 text-amber-400' : 'tab-btn brand-font px-6 py-2 text-zinc-500';
+        }
+
+        // --- SECURITY LOGIC ---
+        function openModal(mode) {
+            const overlay = document.getElementById('modal-overlay');
+            const title = document.getElementById('modal-title');
+            const btn = document.getElementById('modal-action-btn');
+            overlay.style.display = 'flex';
+            document.getElementById('modal-status').innerText = "";
+            document.getElementById('pass-1').value = "";
+            document.getElementById('pass-2').value = "";
+
+            if(mode === 'encrypt') {
+                if(!currentWallet) {
+                   overlay.style.display = 'none';
+                   alert("Harvest a suite first!");
+                   return;
+                }
+                title.innerText = "SEAL KERNEL";
+                btn.innerText = "Encrypt & Save";
+                btn.onclick = processEncrypt;
+            } else {
+                title.innerText = "OPEN KERNEL";
+                btn.innerText = "Decrypt & Load";
+                btn.onclick = processDecrypt;
+            }
+        }
+
+        function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+
+        async function getArgonKey(p1, p2, salt) {
+            return await hashwasm.argon2id({
+                password: p1 + "::" + p2,
+                salt: salt,
+                parallelism: 1,
+                iterations: 2,
+                memorySize: 65536,
+                hashLength: 32,
+                outputType: 'binary'
             });
         }
 
-        // --- EXPORT & DUAL ARGON2 ---
+        async function processEncrypt() {
+            const p1 = document.getElementById('pass-1').value;
+            const p2 = document.getElementById('pass-2').value;
+            if(!p1 || !p2) return;
+            if(!currentWallet) return;
+            
+            const status = document.getElementById('modal-status');
+            status.innerText = "DERIVING DUAL KEY...";
+            
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const keyRaw = await getArgonKey(p1, p2, salt);
+            const key = await crypto.subtle.importKey("raw", keyRaw, "AES-GCM", false, ["encrypt"]);
+            
+            const plaintext = JSON.stringify({
+                a: currentWallet.classicAddress,
+                s: currentWallet.seed,
+                m: document.getElementById('words').innerText
+            });
+
+            const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(plaintext));
+            
+            const exportObj = {
+                type: "CORN_SILO_SECURE",
+                mode: "DUAL_ARGON2",
+                v: "2.0",
+                salt: Array.from(salt),
+                iv: Array.from(iv),
+                data: btoa(String.fromCharCode(...new Uint8Array(ciphertext)))
+            };
+
+            download(JSON.stringify(exportObj, null, 2), `secure_${currentWallet.classicAddress.slice(0,6)}.json`);
+            closeModal();
+        }
+
+        async function processDecrypt() {
+            const p1 = document.getElementById('pass-1').value;
+            const p2 = document.getElementById('pass-2').value;
+            if(!p1 || !p2 || !pendingJsonData) return;
+
+            const status = document.getElementById('modal-status');
+            status.innerText = "RECONSTRUCTING KEY...";
+
+            try {
+                const keyRaw = await getArgonKey(p1, p2, new Uint8Array(pendingJsonData.salt));
+                const key = await crypto.subtle.importKey("raw", keyRaw, "AES-GCM", false, ["decrypt"]);
+                const ct = new Uint8Array(atob(pendingJsonData.data).split("").map(c => c.charCodeAt(0)));
+                
+                const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: new Uint8Array(pendingJsonData.iv) }, key, ct);
+                const decrypted = JSON.parse(new TextDecoder().decode(pt));
+
+                // Re-derive entropy from mnemonic to ensure UI remains consistent with generateNew
+                const entropy = ethers.utils.mnemonicToEntropy(decrypted.m);
+                const wallet = xrpl.Wallet.fromEntropy(new Uint8Array(entropy.match(/.{1,2}/g).map(byte => parseInt(byte, 16))).slice(0, 16));
+                
+                displayWallet(wallet, new Uint8Array(entropy.match(/.{1,2}/g).map(byte => parseInt(byte, 16))));
+                closeModal();
+            } catch(e) {
+                status.innerText = "ACCESS DENIED: WRONG PASSWORDS";
+            }
+        }
+
         function exportRaw() {
             if(!currentWallet) return;
             const data = {
                 address: currentWallet.classicAddress, seed: currentWallet.seed,
-                mnemonic: document.getElementById('words').innerText,
-                type: "CORN_SILO_RAW", ts: new Date().toISOString()
+                mnemonic: document.getElementById('words').innerText
             };
             download(JSON.stringify(data, null, 2), `raw_${data.address.slice(0,6)}.json`);
         }
 
-        function openSecureModal() { if(currentWallet) document.getElementById('modal-overlay').style.display = 'flex'; }
-        function closeSecureModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+        document.getElementById('import-file').onchange = function(e) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const data = JSON.parse(event.target.result);
+                if(data.type === "CORN_SILO_SECURE") {
+                    pendingJsonData = data;
+                    openModal('decrypt');
+                } else {
+                    const entropy = ethers.utils.mnemonicToEntropy(data.mnemonic);
+                    const wallet = xrpl.Wallet.fromEntropy(new Uint8Array(entropy.match(/.{1,2}/g).map(byte => parseInt(byte, 16))).slice(0, 16));
+                    displayWallet(wallet, new Uint8Array(entropy.match(/.{1,2}/g).map(byte => parseInt(byte, 16))));
+                }
+            };
+            reader.readAsText(e.target.files[0]);
+        };
 
-        async function processSecureExport() {
-            const p1 = document.getElementById('pass-1').value;
-            const p2 = document.getElementById('pass-2').value;
-            const status = document.getElementById('secure-status');
-            
-            if(!p1 || !p2) { status.innerText = "BOTH PASSWORDS REQUIRED"; return; }
-            
-            status.innerText = "MIXING DUAL KERNELS...";
-            const combinedPass = p1 + "::" + p2;
-            const salt = crypto.getRandomValues(new Uint8Array(16));
-            
-            try {
-                // High-Security Argon2id
-                const hash = await hashwasm.argon2id({
-                    password: combinedPass, salt: salt,
-                    parallelism: 1, iterations: 3,
-                    memorySize: 65536, hashLength: 32, outputType: 'binary'
-                });
-
-                status.innerText = "SEALING VAULT...";
-                const iv = crypto.getRandomValues(new Uint8Array(12));
-                const key = await crypto.subtle.importKey("raw", hash, "AES-GCM", false, ["encrypt"]);
-                
-                const plaintext = JSON.stringify({
-                    a: currentWallet.classicAddress,
-                    s: currentWallet.seed,
-                    m: document.getElementById('words').innerText
-                });
-
-                const encrypted = await crypto.subtle.encrypt(
-                    { name: "AES-GCM", iv: iv }, key, new TextEncoder().encode(plaintext)
-                );
-
-                const exportObj = {
-                    v: "2.0", mode: "DUAL_ARGON2",
-                    address: currentWallet.classicAddress,
-                    salt: Array.from(salt), iv: Array.from(iv),
-                    data: btoa(String.fromCharCode(...new Uint8Array(encrypted)))
-                };
-
-                download(JSON.stringify(exportObj, null, 2), `secure_${exportObj.address.slice(0,6)}.json`);
-                status.innerText = "SUCCESSFUL HARVEST";
-                setTimeout(closeSecureModal, 1000);
-            } catch(e) { status.innerText = "ERR: " + e.message; }
-        }
-
-        function download(content, name) {
-            const blob = new Blob([content], { type: 'application/json' });
+        function download(c, n) {
+            const blob = new Blob([c], { type: 'application/json' });
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = name;
-            a.click();
+            a.href = URL.createObjectURL(blob); a.download = n; a.click();
         }
 
         // --- TURBO ENGINE ---
@@ -339,7 +389,7 @@
             const grid = document.getElementById('node-grid');
 
             if(isSearching) {
-                btn.innerText = "Halt Turbines";
+                btn.innerText = "Kill Engine";
                 btn.style.filter = "hue-rotate(280deg)";
                 grid.innerHTML = '';
                 for(let i=0; i<WORKER_COUNT; i++) {
@@ -352,9 +402,10 @@
                         if(msg.data.type === 'STATS') {
                             totalAttempts++;
                             if(totalAttempts % 100 === 0) {
-                                document.getElementById('total-attempts').innerText = "Cycles: " + totalAttempts.toLocaleString();
-                                pip.classList.add('active-pip');
-                                setTimeout(() => pip.classList.remove('active-pip'), 100);
+                                document.getElementById('total-attempts').innerText = "Attempts: " + totalAttempts.toLocaleString();
+                                pip.style.background = "#FFD700";
+                                pip.style.boxShadow = "0 0 10px #FFD700";
+                                setTimeout(() => { pip.style.background = "#111"; pip.style.boxShadow = "none"; }, 50);
                             }
                         } else if(msg.data.type === 'MATCH') { processMatch(msg.data); }
                     };
@@ -374,11 +425,11 @@
             document.getElementById('session-count').innerText = harvestBin.length;
             const res = document.getElementById('vanity-results');
             const div = document.createElement('div');
-            div.className = "glass p-6 border-l-4 border-amber-400 flex justify-between items-center animate-pulse";
+            div.className = "glass p-6 border-l-4 border-amber-400 flex justify-between items-center";
             div.innerHTML = `
                 <div class="overflow-hidden">
-                    <div class="text-[9px] text-amber-500 font-black">KERNEL HARVESTED</div>
-                    <div class="text-xs font-bold text-white truncate w-48">${data.address}</div>
+                    <div class="text-[9px] text-amber-500 font-black uppercase">KERNEL FOUND</div>
+                    <div class="text-xs font-bold text-white truncate w-40">${data.address}</div>
                 </div>
                 <button onclick="bank(${harvestBin.length - 1})" class="btn-glow px-4 py-2 rounded-xl text-[10px]">Bank</button>
             `;
